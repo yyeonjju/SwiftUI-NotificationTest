@@ -12,7 +12,7 @@ import Firebase
 class AppDelegate: NSObject, UIApplicationDelegate{
     
     //🌈🌈 firebase cloud messaging🌈🌈
-    let gcmMessageIDKey = "gcm.message_id"
+//    let gcmMessageIDKey = "gcm.message_id"
     
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
@@ -58,37 +58,41 @@ class AppDelegate: NSObject, UIApplicationDelegate{
     
     
     
-    //⭐️⭐️remote notificaiton⭐️⭐️ 디바이스토큰이 APNs에 등록실패했을 때
+    //⭐️⭐️remote notificaiton⭐️⭐️ 디바이스가 APNs에 등록실패했을 때
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         print("🌸🌸🌸🌸🌸🌸RemoteNotification fail register")
         print(error.localizedDescription)
         print(error)
     }
     
-    //⭐️⭐️remote notificaiton⭐️⭐️ 디바이스토큰이 APNs에 등록되었을 때
+    //⭐️⭐️remote notificaiton⭐️⭐️ 디바이스가 APNs에 등록되었을 때
+    //위 코드의 registerForRemoteNotifications() 메서드를 통해 RemoteNotification이 등록되면 호출
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         print("🌸🌸🌸🌸🌸🌸RemoteNotification did register -- deviceToken")
         let deviceTokenString = deviceToken.map { String(format: "%02x", $0) }.joined()
         print(deviceTokenString)
         
+        //🌈🌈 firebase cloud messaging🌈🌈
+        Messaging.messaging().apnsToken = deviceToken
+        
     }
     
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        print("🌸🌸🌸🌸🌸🌸RemoteNotification did Receive Remote Notification")
-        
-
-        
-        
-        //🌈🌈 firebase cloud messaging🌈🌈
-        if let messageID = userInfo[gcmMessageIDKey] {
-          print("Message ID: \(messageID)")
-        }
-
-        print("🌈🌈userInfo",userInfo)
-
-        completionHandler(UIBackgroundFetchResult.newData)
-        
-    }
+//    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+//        print("🌸🌸🌸🌸🌸🌸RemoteNotification did Receive Remote Notification")
+//
+//
+//
+//
+//        //🌈🌈 firebase cloud messaging🌈🌈
+//        if let messageID = userInfo[gcmMessageIDKey] {
+//          print("Message ID: \(messageID)")
+//        }
+//
+//        print("🌈🌈userInfo",userInfo)
+//
+//        completionHandler(UIBackgroundFetchResult.newData)
+//
+//    }
 }
 
 
@@ -99,9 +103,29 @@ extension AppDelegate: UNUserNotificationCenterDelegate{
     }
     
     /*
+    //두 가지 경우에 호출된다. 1.사용자가 노티를 종료했을 때 2.사용자가 노티를 클릭하여 앱을 열었을 때
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+            
+        print("Body: \(response.notification.request.content.body)")
+        print("userInfo: \(response.notification.request.content.userInfo)")
+            
+        let userInfo = response.notification.request.content.userInfo
+            
+        // Notification 분기처리
+        if userInfo[AnyHashable("sesac")] as? String == "project" {
+            print("SESAC PROJECT")
+        }else {
+            print("NOTHING")
+        }
+    }
+    */
+    
+    
+    /*
     // push를 탭한 경우 처리 (local notification 이든, remote notification 이든 푸쉬 알림 온 것을 탭했을 때 )
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        
+        print("🌸🌸 알림 탭")
 
         // deep link처리 시 아래 url값 가지고 처리
         let url = response.notification.request.content.userInfo
@@ -127,20 +151,24 @@ extension AppDelegate: UNUserNotificationCenterDelegate{
         
 
     }
-     
-     */
+    */
+    
 }
-/*:
----
-* 사칙연산 및 모듈로 사용 연습
----
-*/
+
+
 //🌈🌈 firebase cloud messaging🌈🌈 :
 //import Firebase 해야함
 extension AppDelegate: MessagingDelegate {
+    //토큰의 갱신을 모니터링한다
+    //일반적으로 앱 시작 시 등록 토큰을 사용하여 이 메서드를 한 번 호출
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
 
       let deviceToken:[String: String] = ["token": fcmToken ?? ""]
         print("🌈🌈 Device token: ", deviceToken) // This token can be used for testing notifications on FCM
+//        NotificationCenter.default.post(
+//          name: Notification.Name("FCMToken"),
+//          object: nil,
+//          userInfo: deviceToken
+//        )
     }
 }
